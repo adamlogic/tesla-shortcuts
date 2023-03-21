@@ -1,24 +1,19 @@
-import { unstable_dev } from "wrangler";
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
+import { expect, test } from "vitest";
+import { handleRequest } from "./index.js";
 
-describe("Worker", () => {
-  let worker;
+const fetchMock = getMiniflareFetchMock();
+const example = fetchMock.get("https://example.com");
 
-  beforeAll(async () => {
-    worker = await unstable_dev("src/index.js", {
-      experimental: { disableExperimentalWarning: true },
-    });
-  });
+// Throw when no matching mocked request is found
+// (see https://undici.nodejs.org/#/docs/api/MockAgent?id=mockagentdisablenetconnect)
+fetchMock.disableNetConnect();
 
-  afterAll(async () => {
-    await worker.stop();
-  });
+test("responds with url", async () => {
+  example.intercept({ method: "GET", path: "/foo" }).reply(200, "bar");
 
-  it("should return Hello World", async () => {
-    const resp = await worker.fetch();
-    if (resp) {
-      const text = await resp.text();
-      expect(text).toMatchInlineSnapshot(`"Hello World!"`);
-    }
-  });
+  const req = new Request("http://localhost/");
+  const res = await handleRequest(req);
+  const json = await res.json();
+
+  expect(json).toStrictEqual({ response: "Response: bar" });
 });

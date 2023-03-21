@@ -1,15 +1,34 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npx wrangler dev src/index.js` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npx wrangler publish src/index.js --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import {
+  getVehicleIDAndStatusFromVin,
+  wakeVehicle,
+  jsonResponse,
+} from "./tesla";
 
-export default {
-  async fetch(request, env, ctx) {
-    return new Response("Hello World!");
-  },
-};
+addEventListener("fetch", (event) => {
+  event.respondWith(handleRequest(event.request));
+});
+
+// Assuming you've got a build tool that removes `export`s when you actually
+// deploy your worker (e.g. https://esbuild.github.io/api/#format-iife)
+export async function handleRequest(request) {
+  const accessToken = "X-Tesla-access_token";
+  const vin = "X-Tesla-vin";
+  // const accessToken = request.headers.get("X-Tesla-access_token");
+  // const vin = request.headers.get("X-Tesla-vin");
+
+  try {
+    // const { vehicleID, vehicleState } = await getVehicleIDAndStatusFromVin(
+    //   accessToken,
+    //   vin
+    // );
+
+    // await wakeVehicle(accessToken, vehicleID);
+
+    const response = await fetch("https://example.com/foo");
+    const text = await response.text();
+
+    return jsonResponse("Response: " + text);
+  } catch (errorMessage) {
+    return jsonResponse("Error: " + errorMessage);
+  }
+}
